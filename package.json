@@ -1,0 +1,12 @@
+{
+  "name": "circle-progress",
+  "version": "1.0.0",
+  "description": "实现环形进度条",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

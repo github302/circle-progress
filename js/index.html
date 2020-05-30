@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改 css 变量方式实现圆环进度条</title>
+    <link rel="stylesheet" href="./index.css"/>
+    <style>
+     body {
+       display: flex;
+       flex-direction: column;
+       justify-content: center;
+       align-items: center;
+     }
+    </style>
+</head>
+<body>
+    <section>
+        <div class="circle-wrap">
+          <div class="circle">
+            <div class="mask full">
+              <div class="fill"></div>
+            </div>
+            <div class="mask half">
+              <div class="fill"></div>
+            </div>
+            <div class="inside-circle" id="text"></div>
+          </div>
+        </div>
+    </section>
+    <div>
+      <label for="score">请输入得分</label>
+      <input id="score" class="input"/>
+      <button id="btn">画圆环</button>
+    </div>
+    <script>
+
+      window.onload = init;
+      // 判断是否支持css变量
+      const isSupported = window.CSS && window.CSS.supports && window.CSS.supports('--a', 0);
+      function init() {
+        const fullRad = 180;
+        const input = document.getElementById("score");
+        const text = document.getElementById("text");
+        const btn = document.getElementById("btn");
+
+        const cssRad = getComputedStyle(document.documentElement).getPropertyValue('--rad'); 
+        const currentRad = parseInt(cssRad.substr(0, cssRad.length - 3), 10);
+        let score = parseInt(currentRad / fullRad * 100);
+        console.log("init=========isSupported=", isSupported, currentRad, score);
+        input.value = score;
+        text.innerText = score + '分';
+
+        // 获取 css 变量值
+        // const defaultScore = document.body.style.getPropertyValue('--rad'); // 获取挂在 body 上的 css 变量
+        // 设置 css 变量值
+        // document.body.style.setProperty('--rad', 0); // 设置挂在 body 上的 css 变量
+        
+       
+        input.addEventListener("change", function(event) {
+          score = parseInt(event.target.value, 10);          
+        });
+
+        btn.addEventListener("click", function() {
+          text.innerText = score + '分';
+          let step = 0;
+          const draw = () => {
+            console.log(step, score);
+            if (step > score) {
+              return ;
+            }
+            updateRad(step);
+            step += 1;
+            window.requestAnimationFrame(draw);
+          }
+          draw();
+        })
+
+        function updateRad(step) {
+          const rad = step / 100 * fullRad;
+          console.log(step, score, rad);
+          // document.body.style.setProperty('--rad', rad + 'deg');
+          document.documentElement.style.setProperty('--rad', rad + 'deg');
+        }
+
+      }
+      
+      
+     
+    </script>
+</body>
+</html>

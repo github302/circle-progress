@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>canvas实现圆环进度条</title>
+    <style>
+        .progress-box {
+            position: relative;
+            display: flex;  
+            align-items: center;
+            justify-content: center;
+            margin: 60px auto;
+        }
+        .progress-text {
+            position: absolute; 
+            display: flex;  
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-info {
+            font-size: 40px;
+            padding-left: 8px;
+            letter-spacing: 1px;  
+        }
+
+        .unit {
+            font-size: 18px;
+            margin-top: 10px;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-box">
+        <canvas id="canvas"></canvas>
+        <div class="progress-text">
+            <div class='progress-info' id="text"></div>
+            <div class="unit" id="unit">分</div>
+        </div>     
+    </div>
+    <input id="score"/>
+    <button id="btn1">画圆环</button>
+    <button id="btn2">画渐变色圆环</button>
+</body>
+<script>
+    var stopId = null, stopId1 = null;
+    window.onload = init;
+     // 获取像素比
+    function getPixelRatio(context) {
+        const backingStore = context.backingStorePixelRatio ||
+            context.webkitBackingStorePixelRatio ||
+            context.mozBackingStorePixelRatio ||
+            context.msBackingStorePixelRatio ||
+            context.oBackingStorePixelRatio ||
+            context.backingStorePixelRatio || 1;
+        return (window.devicePixelRatio || 1) / backingStore;
+    };
+    function init() {
+        const btn1 = document.getElementById("btn1");
+        const btn2 = document.getElementById("btn2");
+        const input = document.getElementById("score");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const text = document.getElementById("text");
+        const unit = document.getElementById("unit");
+
+        const size = 200; // canvas的边长
+        const ratio = getPixelRatio(ctx);
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+        canvas.width = size * ratio;
+        canvas.height = size * ratio;
+        ctx.scale(ratio, ratio); // 放大倍数，保证绘图不模糊
+
+        let score = 0;
+        const centerX = size / 2; // 圆心的 X 坐标位置
+        const centerY = size / 2; // 圆心的 Y 坐标位置
+        const lineWidth = 10; // 圆环宽度
+        const bgColor = '#3A475F'; // 圆环的底色
+
+        input.addEventListener("change", function(event) {
+            score = parseInt(event.target.value, 10);
+        });
+
+        btn1.addEventListener("click", function() {
+            text.innerText = score;
+            unit.style.visibility = 'visible';
+            draw();
+        })
+
+        btn2.addEventListener("click", function() {
+            text.innerText = score;
+            unit.style.visibility = 'visible';
+            drawGradient();
+        })
+
+
+        function draw() {
+            const foreColor = '#8558FA' // 圆环前景色
+            let speed = 0;
+
+            // 绘制背景圆圈
+            const drawBackgroundCircle = () => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.lineWidth = lineWidth;
+                const radius = centerX - lineWidth;
+                ctx.lineCap = "round";
+                ctx.strokeStyle = bgColor;
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2, false);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            // 绘制运动圆环
+            const drawForegroundCircle = (step) => {
+                ctx.save();
+                ctx.strokeStyle = foreColor;
+                ctx.lineWidth = lineWidth;
+                ctx.lineCap = "round";
+                const radius = centerX - lineWidth;
+                const rad = Math.PI * 2 * step / 100;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius , -Math.PI / 2, -Math.PI / 2 + rad, false); //用于绘制圆弧context.arc(x坐标，y坐标，半径，起始角度，终止角度，顺时针/逆时针)
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            const drawFrame = () => {
+                if (speed > score) {
+                    return ;
+                }
+                drawForegroundCircle(speed);
+                speed += 1;
+                stopId = window.requestAnimationFrame(drawFrame);
+            }
+
+            ctx.clearRect(0, 0, size, size);
+            drawBackgroundCircle();
+            drawFrame();
+        }
+
+        function drawGradient() {
+            let speed = 0;
+
+            // 绘制背景圆圈
+            const drawBackgroundCircle = () => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.lineWidth = lineWidth;
+                const radius = centerX - lineWidth;
+                ctx.lineCap = "round";
+                ctx.strokeStyle = bgColor;
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2, false);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            // 绘制运动圆环
+            const drawForegroundCircle = (step) => {
+                ctx.save();
+                // 设置渐变色
+                var gradient = ctx.createLinearGradient(200, 100, 100, 200);
+                gradient.addColorStop("0", "#2661DD");
+                gradient.addColorStop("0.5", "#40ED94");
+                gradient.addColorStop("1.0", "#5956CC");
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = lineWidth;
+                ctx.lineCap = "round";
+                const radius = centerX - lineWidth;
+                const rad = Math.PI * 2 * step / 100;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius , -Math.PI / 2, -Math.PI / 2 + rad, false); //用于绘制圆弧context.arc(x坐标，y坐标，半径，起始角度，终止角度，顺时针/逆时针)
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            const drawFrame = () => {
+                if (speed > score) {
+                    return ;
+                }
+                drawForegroundCircle(speed);
+                speed += 1;
+                stopId1 = window.requestAnimationFrame(drawFrame);
+            }
+
+            ctx.clearRect(0, 0, size, size);
+            drawBackgroundCircle();
+            drawFrame();
+        }
+    }
+    window.onunload = function() {
+        if (stopId) {
+            window.cancelAnimationFrame(stopId);
+        }
+        if (stopId1) {
+            window.cancelAnimationFrame(stopId1);
+        }
+    }
+</script>
+</html>
